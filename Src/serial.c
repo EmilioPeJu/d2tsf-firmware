@@ -1,35 +1,44 @@
+#include <string.h>
+
 #include "serial.h"
 
-uint8_t host_uart_rx_buffer[HOST_RX_BUFFER_SIZE];
-uint16_t host_uart_rx_filled = 0;
-uint16_t host_uart_message_len = 0;
+struct serial_buffer_t time_serial_buffer;
+struct serial_buffer_t host_serial_buffer;
 
 
-void host_uart_start_it()
+void serial_init()
 {
-    host_uart_rx_filled = 0;
-    host_uart_message_len = 0;
-    HAL_UART_Receive_IT(&HOST_HUART, host_uart_rx_buffer, 1);
+    TIME_HUART.Instance->CR1 |= USART_CR1_RXNEIE;
+    HOST_HUART.Instance->CR1 |= USART_CR1_RXNEIE;
 }
 
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+void serial_handle_rx(UART_HandleTypeDef *huart, struct serial_buffer_t *buffer)
 {
-    if (huart == &HOST_HUART) {
-        uint16_t index = host_uart_rx_filled;
-        host_uart_rx_filled++;
-        if (host_uart_rx_filled >= HOST_RX_BUFFER_SIZE - 1) {
-            // on overflow, we truncate the message received
-            host_uart_rx_buffer[index] = TERMINATOR;
-        }
-        uint8_t rx_char = host_uart_rx_buffer[index];
-        if (rx_char == TERMINATOR) {
-            host_uart_message_len = host_uart_rx_filled;
-            host_uart_rx_buffer[index + 1] = 0;
+    uint32_t isrflags = READ_REG(huart->Instance->SR);
+    if (isrflags & USART_SR_RXNE) {
+        uint8_t rx_char = READ_REG(huart->Instance->DR);
+        uint16_t index = buffer->len++;
+        if (buffer->len < SERIAL_BUFFER_SIZE) {
+            buffer->data[index] = rx_char;
         } else {
-            HAL_UART_Receive_IT(
-                &HOST_HUART, host_uart_rx_buffer + host_uart_rx_filled, 1);
+            buffer->too_long++;
+            buffer->data[index] = TERMINATOR;
         }
+        if (buffer->data[index] == TERMINATOR) {
+            if (buffer->got_cmd) {
+                buffer->overruns++;
+            } else {
+                buffer->got_cmd = true;
+                buffer->cmd_len = buffer->len;
+                memcpy(buffer->command, buffer->data, buffer->cmd_len);
+                buffer->command[buffer->cmd_len] = 0;
+            }
+            buffer->len = 0;
+        }
+    }
+    if (isrflags & USART_SR_ORE) {
+        buffer->uart_overruns++;
     }
 }
 
@@ -40,5 +49,6 @@ int _write(int file, char *ptr, int len)
         return -1;
 
     return HAL_UART_Transmit(
-        &HOST_HUART, (uint8_t *) ptr, (uint16_t) len, 100) == HAL_OK ? len : -1;
+        &HOST_HUART, (uint8_t *) ptr, (uint16_t) len,
+        TX_SERIAL_TIMEOUT) == HAL_OK ? len : -1;
 }

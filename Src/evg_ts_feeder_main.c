@@ -5,9 +5,10 @@
 
 #include "evg_ts_feeder_main.h"
 
+
 void evg_ts_feeder_main()
 {
-    host_uart_start_it();
+    serial_init();
     while (1) {
         cli_process();
     }
