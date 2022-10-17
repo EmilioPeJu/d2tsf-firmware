@@ -41,10 +41,18 @@ static bool stat_command(char *args)
 }
 
 
+static bool ver_command(char *args)
+{
+    printf("OK EVG2EVR-FEEDER " RELEASE "\n");
+    return true;
+}
+
+
 struct command_description command_table[] = {
     {"help", help_command, "generates a command list"},
     {"ping", ping_command, "return a pong"},
     {"stat", stat_command, "show statistics"},
+    {"ver", ver_command, "show version"}
 };
 
 
