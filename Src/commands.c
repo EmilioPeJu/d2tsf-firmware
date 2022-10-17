@@ -6,7 +6,22 @@
 #include <inttypes.h>
 
 #include "commands.h"
+#include "gps.h"
+#include "serial.h"
 #include "util.h"
+
+
+static bool gps_forward_command(char *args)
+{
+    unsigned int enable;
+    int nargs = sscanf(args, "%u", &enable);
+    if (nargs != 1) {
+        printf("ERR invalid format\n");
+        return false;
+    }
+    gps_forward_to_host(enable ? true : false);
+    return true;
+}
 
 
 static bool help_command(char *args)
@@ -49,6 +64,7 @@ static bool ver_command(char *args)
 
 
 struct command_description command_table[] = {
+    {"gps_forward", gps_forward_command, "forward GPS messages to host serial"},
     {"help", help_command, "generates a command list"},
     {"ping", ping_command, "return a pong"},
     {"stat", stat_command, "show statistics"},
