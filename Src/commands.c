@@ -15,7 +15,7 @@ static bool help_command(char *args)
     struct command_description *command;
     size_t command_index;
     for_each_command (command, command_index) {
-        printf("+%10s -> %s\n", command->name, command->help);
+        printf("+ %16s -> %s\n", command->name, command->help);
     }
     printf(".\n");
 
