@@ -70,5 +70,5 @@ void execute_command_line(char *line)
             return;
         }
     }
-    printf("ERR Command not found");
+    printf("ERR Command not found: %s", line);
 }
