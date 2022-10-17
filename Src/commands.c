@@ -30,9 +30,21 @@ static bool ping_command(char *args)
 }
 
 
+static bool stat_command(char *args)
+{
+    printf("+ host serial overruns %" PRIu32 "\n", host_serial_buffer.overruns);
+    printf("+ host serial byte overruns %" PRIu32 "\n", host_serial_buffer.uart_overruns);
+    printf("+ time serial overruns %" PRIu32 "\n", time_serial_buffer.overruns);
+    printf("+ time serial byte overruns %" PRIu32 "\n", time_serial_buffer.uart_overruns);
+    printf(".\n");
+    return true;
+}
+
+
 struct command_description command_table[] = {
     {"help", help_command, "generates a command list"},
     {"ping", ping_command, "return a pong"},
+    {"stat", stat_command, "show statistics"},
 };
 
 
