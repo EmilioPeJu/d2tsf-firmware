@@ -1,8 +1,9 @@
 #include <stdbool.h>
 
 #include "commands.h"
-#include "cli.h"
 #include "serial.h"
+
+#include "cli_process.h"
 
 
 void cli_process()
