@@ -56,6 +56,7 @@ LINKER_SCRIPT = $(TOP)/STM32F411RETX_FLASH.ld
 
 LDFLAGS += -mcpu=cortex-m4
 LDFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb
+LDFLAGS += -u _printf_float -u _scanf_float
 LDFLAGS += --specs=nano.specs
 LDFLAGS += -T"$(LINKER_SCRIPT)"
 LDFLAGS += --specs=nosys.specs
