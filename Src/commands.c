@@ -6,7 +6,7 @@
 #include <inttypes.h>
 
 #include "commands.h"
-#include "gps.h"
+#include "gps_process.h"
 #include "serial.h"
 #include "util.h"
 
@@ -19,7 +19,22 @@ static bool gps_forward_command(char *args)
         printf("ERR invalid format\n");
         return false;
     }
-    gps_forward_to_host(enable ? true : false);
+    gps_set_forward_to_host(enable ? true : false);
+    printf("OK gps_forward done\n");
+    return true;
+}
+
+
+static bool gps_notify_command(char *args)
+{
+    unsigned int enable;
+    int nargs = sscanf(args, "%u", &enable);
+    if (nargs != 1) {
+        printf("ERR invalid format\n");
+        return false;
+    }
+    gps_set_notify_timestamp(enable ? true : false);
+    printf("OK gps_notify done\n");
     return true;
 }
 
@@ -57,10 +72,20 @@ static bool reset_command(char *args)
 
 static bool stat_command(char *args)
 {
-    printf("+ host serial overruns %" PRIu32 "\n", host_serial_buffer.overruns);
-    printf("+ host serial byte overruns %" PRIu32 "\n", host_serial_buffer.uart_overruns);
-    printf("+ time serial overruns %" PRIu32 "\n", time_serial_buffer.overruns);
-    printf("+ time serial byte overruns %" PRIu32 "\n", time_serial_buffer.uart_overruns);
+    printf("+ host serial overruns: %" PRIu32 "\n",host_serial_buffer.overruns);
+    printf("+ host serial byte overruns: %" PRIu32 "\n",
+        host_serial_buffer.uart_overruns);
+    printf("+ time serial overruns: %" PRIu32 "\n",time_serial_buffer.overruns);
+    printf("+ time serial byte overruns: %" PRIu32 "\n",
+        time_serial_buffer.uart_overruns);
+    printf("+ uptime: %" PRIu32 "\n", util_get_uptime());
+    struct gps_data data = gps_get_last_data();
+    printf("+ GPS data valid: %s\n", data.valid ? "True" : "False");
+    printf("+ GPS timestamp: %" PRIu32 "\n", data.timestamp);
+    printf("+ GPS timestamp updates: %" PRIu32 "\n",
+        gps_get_ts_update_counter());
+    printf("+ GPS coords: %f%c,%f%c\n", data.lat, data.ns, data.lon, data.ew);
+    printf("+ GPS speed: %f\n", data.speed);
     printf(".\n");
     return true;
 }
@@ -75,6 +100,7 @@ static bool ver_command(char *args)
 
 struct command_description command_table[] = {
     {"gps_forward", gps_forward_command, "forward GPS messages to host serial"},
+    {"gps_notify", gps_notify_command, "notify GPS timestamp"},
     {"help", help_command, "generates a command list"},
     {"ping", ping_command, "return a pong"},
     {"reset", reset_command, "reset MCU"},
