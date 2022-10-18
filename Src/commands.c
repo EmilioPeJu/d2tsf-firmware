@@ -45,6 +45,16 @@ static bool ping_command(char *args)
 }
 
 
+static bool reset_command(char *args)
+{
+    printf("OK Resetting the MCU\n");
+    // give the UART chance to send out the message
+    HAL_Delay(50);
+    HAL_NVIC_SystemReset();
+    return true;
+}
+
+
 static bool stat_command(char *args)
 {
     printf("+ host serial overruns %" PRIu32 "\n", host_serial_buffer.overruns);
@@ -67,6 +77,7 @@ struct command_description command_table[] = {
     {"gps_forward", gps_forward_command, "forward GPS messages to host serial"},
     {"help", help_command, "generates a command list"},
     {"ping", ping_command, "return a pong"},
+    {"reset", reset_command, "reset MCU"},
     {"stat", stat_command, "show statistics"},
     {"ver", ver_command, "show version"}
 };
