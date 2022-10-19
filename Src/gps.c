@@ -6,6 +6,25 @@
 #include "gps.h"
 
 
+static bool validate_checksum(char *line)
+{
+    uint8_t acc = 0;
+    unsigned int expected_checksum;
+    char *checksum_ptr = strrchr(line, '*');
+    if (checksum_ptr == NULL)
+        return false;
+
+    int nparsed = sscanf(checksum_ptr, "*%x", &expected_checksum);
+    if (nparsed != 1)
+        return false;
+
+    for (char *ptr = line + 1; ptr < checksum_ptr; ptr++)
+        acc ^= *ptr;
+
+    return acc == (uint8_t) expected_checksum;
+}
+
+
 struct gps_data parse_gps_message(char *msg)
 {
     struct gps_data result = (struct gps_data) {
@@ -15,6 +34,11 @@ struct gps_data parse_gps_message(char *msg)
             msg[3] != 'R' ||
             msg[4] != 'M' ||
             msg[5] != 'C') {
+        return result;
+    }
+
+    if (!validate_checksum(msg)) {
+        result.checksum_invalid = true;
         return result;
     }
 

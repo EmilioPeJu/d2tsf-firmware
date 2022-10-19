@@ -83,6 +83,8 @@ static bool stat_command(char *args)
     printf("+ uptime: %" PRIu32 "\n", util_get_uptime());
     struct gps_data data = gps_get_last_data();
     printf("+ GPS data valid: %s\n", data.valid ? "True" : "False");
+    printf("+ GPS checksum not valid: %s\n",
+        data.checksum_invalid ? "True" : "False");
     printf("+ GPS timestamp: %" PRIu32 "\n", data.timestamp);
     printf("+ GPS timestamp updates: %" PRIu32 "\n",
         gps_get_ts_update_counter());

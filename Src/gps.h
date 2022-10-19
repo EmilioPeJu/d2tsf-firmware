@@ -6,6 +6,7 @@
 
 struct gps_data {
     bool valid;
+    bool checksum_invalid;
     uint32_t timestamp;
     float lat;
     char ns;
