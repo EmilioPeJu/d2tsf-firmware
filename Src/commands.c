@@ -72,12 +72,14 @@ static bool reset_command(char *args)
 
 static bool stat_command(char *args)
 {
-    printf("+ host serial overruns: %" PRIu32 "\n",host_serial_buffer.overruns);
     printf("+ host serial byte overruns: %" PRIu32 "\n",
         host_serial_buffer.uart_overruns);
-    printf("+ time serial overruns: %" PRIu32 "\n",time_serial_buffer.overruns);
+    printf("+ host serial buffer overruns: %" PRIu32 "\n",
+        host_serial_buffer.buffer_overruns);
     printf("+ time serial byte overruns: %" PRIu32 "\n",
         time_serial_buffer.uart_overruns);
+    printf("+ time serial buffer overruns: %" PRIu32 "\n",
+        time_serial_buffer.buffer_overruns);
     printf("+ uptime: %" PRIu32 "\n", util_get_uptime());
     struct gps_data data = gps_get_last_data();
     printf("+ GPS data valid: %s\n", data.valid ? "True" : "False");
