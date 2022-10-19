@@ -25,7 +25,7 @@ CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb
 CFLAGS += -std=gnu11
 CFLAGS += -g3
-CFLAGS += -O0
+CFLAGS += -O2
 CFLAGS += -DUSE_HAL_DRIVER
 CFLAGS += -DSTM32F411xE
 CFLAGS += -I$(TOP)/Core/Inc
