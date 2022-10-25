@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "cli_process.h"
+#include "cli.h"
 #include "gps_process.h"
 #include "peripherals.h"
 #include "serial.h"

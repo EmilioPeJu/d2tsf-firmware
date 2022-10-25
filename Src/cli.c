@@ -3,14 +3,13 @@
 #include "commands.h"
 #include "serial.h"
 
-#include "cli_process.h"
-
-static uint8_t _cli_cmd[MAX_COMMAND_SIZE + 1];
-static uint8_t _cli_cmd_i = 0;
+#include "cli.h"
 
 
-void cli_process()
+void cli_handle()
 {
+    static uint8_t _cli_cmd[MAX_COMMAND_SIZE + 1];
+    static uint16_t _cli_cmd_i = 0;
     uint8_t rx_char = 0;
     while (!rb_is_empty(&host_serial_buffer) &&
             rx_char != TERMINATOR &&
