@@ -14,7 +14,7 @@ static void shift_bit(uint32_t bit)
 }
 
 
-void shift_timestamp(uint32_t ts)
+void gpio_shift_timestamp(uint32_t ts)
 {
     for (uint8_t i=0; i < 32; i++) {
         shift_bit(!!(ts & 0x80000000));

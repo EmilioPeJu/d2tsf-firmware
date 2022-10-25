@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-void shift_timestamp(uint32_t ts);
+void gpio_shift_timestamp(uint32_t ts);
 
 #endif
