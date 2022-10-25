@@ -1,0 +1,14 @@
+stages:
+  - Build and Deploy
+target_f411:
+  stage: Build and Deploy
+  tags:
+    - rhel8
+  script:
+   - |
+       make || exit 1
+       if [[ -n "$CI_COMMIT_TAG" ]]; then
+           DESTDIR=/dls_sw/work/ci-builds/${CI_PROJECT_NAME}/${CI_COMMIT_TAG}
+           mkdir -p "$DESTDIR"
+           cp -f build/*.hex build/*.elf build/*.bin "$DESTDIR"
+       fi
