@@ -50,8 +50,10 @@ static bool gps_data_command(char *args)
             data.lat, data.ns, data.lon, data.ew);
     if (data.valid_speed)
         printf("+ GPS speed: %f\n", data.speed);
-    printf("+ Holding timestamp: %s\n",
+    printf("+ Using local timestamp: %s\n",
         gps_local_timestamp_on() ? "yes" : "no");
+    printf("+ Local timestamp use count: %" PRIu32 "\n",
+        gps_local_timestamp_use_count());
     printf(".\n");
     return true;
 }

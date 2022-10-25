@@ -24,6 +24,7 @@ struct gps_msg_stats gps_get_msg_stats()
     return _gps_msg_stats;
 }
 
+
 // true if we got a full message
 static bool _receive_msg(
     uint8_t *buffer, uint16_t *nbytes, enum gps_msg_type *type,

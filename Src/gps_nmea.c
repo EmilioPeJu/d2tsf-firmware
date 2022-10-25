@@ -15,6 +15,7 @@ static uint32_t _ts_update_counter = 0;
 static struct gps_nmea_rmc_data _last_nmea_rmc_data;
 static uint32_t _hold_ts;
 static bool _using_hold_ts;
+static uint32_t _hold_ts_use_count;
 
 
 struct gps_nmea_rmc_data gps_nmea_get_last_rmc_data()
@@ -137,6 +138,12 @@ bool gps_local_timestamp_on()
 }
 
 
+uint32_t gps_local_timestamp_use_count()
+{
+    return _hold_ts_use_count;
+}
+
+
 // we assume we get RMC messages every second
 bool gps_nmea_process_msg(uint8_t *buffer, uint16_t len)
 {
@@ -160,6 +167,7 @@ bool gps_nmea_process_msg(uint8_t *buffer, uint16_t len)
     } else {
         _hold_ts++;
         _using_hold_ts = true;
+        _hold_ts_use_count++;
         gpio_shift_timestamp(_hold_ts + 1);
         if (_notify_timestamp)
             printf("%" PRIu32 "\n", _hold_ts);

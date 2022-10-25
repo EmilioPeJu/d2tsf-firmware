@@ -37,6 +37,8 @@ bool gps_nmea_validate_checksum(char *line);
 
 bool gps_local_timestamp_on();
 
+uint32_t gps_local_timestamp_use_count();
+
 bool gps_nmea_process_msg(uint8_t *buffer, uint16_t len);
 
 #endif
