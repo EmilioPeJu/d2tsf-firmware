@@ -6,9 +6,21 @@
 #include <inttypes.h>
 
 #include "commands.h"
-#include "gps_process.h"
+#include "gps.h"
+#include "gps_nmea.h"
+#include "gps_ubx.h"
 #include "serial.h"
 #include "util.h"
+
+#ifdef TEST
+#include "tests.h"
+static bool run_tests_command(char *args)
+{
+    bool result = test_gps();
+    printf(".\n");
+    return result;
+}
+#endif
 
 
 static bool gps_forward_command(char *args)
@@ -19,9 +31,53 @@ static bool gps_forward_command(char *args)
         printf("ERR invalid format\n");
         return false;
     }
-    gps_set_forward_to_host(enable ? true : false);
+    gps_set_forward_nmea_to_host(enable ? true : false);
     printf("OK gps_forward done\n");
     return true;
+}
+
+
+static bool gps_data_command(char *args)
+{
+    struct gps_nmea_rmc_data data = gps_nmea_get_last_rmc_data();
+    printf("+ GPS data valid: %s\n", data.valid ? "True" : "False");
+    printf("+ GPS timestamp updates: %" PRIu32 "\n",
+        gps_get_ts_update_counter());
+    if (data.valid_timestamp)
+        printf("+ GPS timestamp: %" PRIu32 "\n", data.timestamp);
+    if (data.valid_coords)
+        printf("+ GPS coords: %f%c,%f%c\n",
+            data.lat, data.ns, data.lon, data.ew);
+    if (data.valid_speed)
+        printf("+ GPS speed: %f\n", data.speed);
+    printf("+ Holding timestamp: %s\n",
+        gps_local_timestamp_on() ? "yes" : "no");
+    printf(".\n");
+    return true;
+}
+
+
+static bool gps_mon_rf_command(char *args)
+{
+    bool result = gps_ubx_send_mon_rf();
+    if (result)
+        printf("OK MON RF Sent\n");
+    else
+        printf("ERR MON RF failed\n");
+
+    return result;
+}
+
+
+static bool gps_nav_sat_command(char *args)
+{
+    bool result = gps_ubx_send_nav_sat();
+    if (result)
+        printf("OK NAV SAT Sent\n");
+    else
+        printf("ERR NAV SAT failed\n");
+
+    return result;
 }
 
 
@@ -39,6 +95,43 @@ static bool gps_notify_command(char *args)
 }
 
 
+static bool gps_valget_command(char *args)
+{
+    unsigned int key;
+    uint32_t val;
+    int nargs = sscanf(args, "%x", &key);
+    if (nargs != 1) {
+        printf("ERR invalid format\n");
+        return false;
+    }
+    if (gps_ubx_val_get_int((uint32_t) key, &val)) {
+        printf("OK gps_valget *%x == %" PRIu32 "\n", key, val);
+        return true;
+    } else {
+        printf("ERR gps_valget failed\n");
+        return false;
+    }
+}
+
+
+static bool gps_valset_command(char *args)
+{
+    unsigned int key, val;
+    int nargs = sscanf(args, "%x %x", &key, &val);
+    if (nargs != 2) {
+        printf("ERR invalid format\n");
+        return false;
+    }
+    if (gps_ubx_val_set_int((uint32_t) key, (uint32_t) val)) {
+        printf("OK gps_valset *%x = %x\n", key, val);
+        return true;
+    } else {
+        printf("ERR gps_valset failed\n");
+        return false;
+    }
+}
+
+
 static bool help_command(char *args)
 {
     printf("+The following commands are supported:\n");
@@ -49,6 +142,23 @@ static bool help_command(char *args)
     }
     printf(".\n");
 
+    return true;
+}
+
+
+static bool msg_stat_command(char *args)
+{
+    struct gps_msg_stats stats = gps_get_msg_stats();
+    printf("+ Unexpected start count: %" PRIu32 "\n", stats.unexpected_start);
+    printf("+ Overflow count: %" PRIu32 "\n", stats.overflow);
+    printf("+ NMEA count: %" PRIu32 "\n", stats.nmea_count);
+    printf("+ NMEA unknown count: %" PRIu32 "\n", stats.nmea_unknown_count);
+    printf("+ NMEA bad checksum count: %" PRIu32 "\n", stats.nmea_bad_checksum);
+    printf("+ UBX count: %" PRIu32 "\n", stats.ubx_count);
+    printf("+ UBX malformed count: %" PRIu32 "\n", stats.ubx_malformed);
+    printf("+ UBX bad checksum count: %" PRIu32 "\n", stats.ubx_bad_checksum);
+    printf("+ UBX unexpected count: %" PRIu32 "\n", stats.ubx_unexpected_count);
+    printf(".\n");
     return true;
 }
 
@@ -81,15 +191,6 @@ static bool stat_command(char *args)
     printf("+ time serial buffer overruns: %" PRIu32 "\n",
         time_serial_buffer.buffer_overruns);
     printf("+ uptime: %" PRIu32 "\n", util_get_uptime());
-    struct gps_data data = gps_get_last_data();
-    printf("+ GPS data valid: %s\n", data.valid ? "True" : "False");
-    printf("+ GPS checksum not valid: %s\n",
-        data.checksum_invalid ? "True" : "False");
-    printf("+ GPS timestamp: %" PRIu32 "\n", data.timestamp);
-    printf("+ GPS timestamp updates: %" PRIu32 "\n",
-        gps_get_ts_update_counter());
-    printf("+ GPS coords: %f%c,%f%c\n", data.lat, data.ns, data.lon, data.ew);
-    printf("+ GPS speed: %f\n", data.speed);
     printf(".\n");
     return true;
 }
@@ -103,9 +204,21 @@ static bool ver_command(char *args)
 
 
 struct command_description command_table[] = {
-    {"gps_forward", gps_forward_command, "forward GPS messages to host serial"},
+#ifdef TEST
+    {"run_tests", run_tests_command, "run tests"},
+#endif
+    {"gps_data", gps_data_command, "show GPS data"},
+    {"gps_forward", gps_forward_command,
+        "forward GPS NMEA messages to host serial"},
+    {"gps_mon_rf", gps_mon_rf_command, "show RF block information"},
+    {"gps_nav_sat", gps_nav_sat_command, "show satellite information"},
     {"gps_notify", gps_notify_command, "notify GPS timestamp"},
+    {"gps_valget", gps_valget_command,
+        "Get a GPS configuration parameter. gps_valget <hex-key>"},
+    {"gps_valset", gps_valset_command,
+        "set a GPS configuration parameter. gps_valset <hex-key> <hex-value>"},
     {"help", help_command, "generates a command list"},
+    {"msg_stat", msg_stat_command, "show message statistics"},
     {"ping", ping_command, "return a pong"},
     {"reset", reset_command, "reset MCU"},
     {"stat", stat_command, "show statistics"},

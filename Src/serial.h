@@ -7,15 +7,16 @@
 #include "peripherals.h"
 #include "ring_buffer.h"
 
-#define MAX_COMMAND_SIZE 128
+#define MAX_COMMAND_SIZE 256
 #define TERMINATOR 10
-#define TX_SERIAL_TIMEOUT 5  // ms
+#define TX_SERIAL_TIMEOUT 8  // ms
+#define RX_SERIAL_TIMEOUT 8  // ms
 
 extern struct ring_buffer time_serial_buffer;
 
 extern struct ring_buffer host_serial_buffer;
 
-void serial_init();
+bool serial_init();
 
 void serial_handle_rx(UART_HandleTypeDef *huart, struct ring_buffer *buffer);
 

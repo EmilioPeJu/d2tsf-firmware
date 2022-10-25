@@ -6,10 +6,11 @@ struct ring_buffer time_serial_buffer;
 struct ring_buffer host_serial_buffer;
 
 
-void serial_init()
+bool serial_init()
 {
     TIME_HUART.Instance->CR1 |= USART_CR1_RXNEIE;
     HOST_HUART.Instance->CR1 |= USART_CR1_RXNEIE;
+    return true;
 }
 
 
