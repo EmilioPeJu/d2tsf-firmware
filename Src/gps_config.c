@@ -25,6 +25,9 @@
 bool gps_config()
 {
     bool result = true;
+    // Make sure we get a RMC message every second
+    ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_UART1OUTPROT_NMEA, 1));
+    ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_MSGOUT_NMEA_ID_RMC_UART1, 1));
     // Disable unused NMEA messages
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_MSGOUT_NMEA_ID_GGA_UART1, 0));
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_MSGOUT_NMEA_ID_GSA_UART1, 0));

@@ -1,3 +1,8 @@
+// UART1 output protocol enable
+const uint32_t CFG_UART1OUTPROT_UBX = 0x10740001;
+const uint32_t CFG_UART1OUTPROT_NMEA = 0x10740002;
+const uint32_t CFG_UART1OUTPROT_RTCM3X = 0x10740004;
+
 // Message output configuration
 const uint32_t CFG_MSGOUT_NMEA_ID_DTM_UART1 = 0x209100a7;
 const uint32_t CFG_MSGOUT_NMEA_ID_GBS_UART1 = 0x209100de;
