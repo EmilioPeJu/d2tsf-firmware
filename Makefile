@@ -22,7 +22,8 @@ endif
 CPPFLAGS += -DRELEASE='"$(RELEASE)"'
 
 CFLAGS += -mcpu=cortex-m4
-CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb
+CFLAGS += -mthumb
+CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 CFLAGS += -std=gnu11
 CFLAGS += -g3
 CFLAGS += -O2
@@ -80,6 +81,12 @@ OBJDUMP_LIST += $(BUILD_DIR)/$(OUTFILE_PREFIX).list
 SRC_DIRS += Core/Src
 SRC_DIRS += Drivers/STM32F4xx_HAL_Driver/Src
 SRC_DIRS += Src
+
+ifdef TEST
+    CFLAGS += -DTEST
+    CFLAGS += -I$(TOP)/tests
+    SRC_DIRS += tests
+endif
 
 SRCS += $(foreach dir,$(SRC_DIRS),$(wildcard $(TOP)/$(dir)/*.c))
 OBJS = $(patsubst $(TOP)/%,$(BUILD_DIR)/%,$(SRCS:.c=.o))
