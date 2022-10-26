@@ -144,7 +144,7 @@ uint32_t gps_local_timestamp_use_count()
 }
 
 
-// we assume we get RMC messages every second
+// we assume we get a RMC message every second shortly after the PPS
 bool gps_nmea_process_msg(uint8_t *buffer, uint16_t len)
 {
     if (_forward_nmea_to_host)
@@ -159,7 +159,6 @@ bool gps_nmea_process_msg(uint8_t *buffer, uint16_t len)
         _last_nmea_rmc_data = gps_data;
         _hold_ts = gps_data.timestamp;
         _using_hold_ts = false;
-        HAL_Delay(1);  // make sure PPS happens before
         gpio_shift_timestamp(gps_data.timestamp + 1);
         if (_notify_timestamp)
             printf("%" PRIu32 "\n", gps_data.timestamp);
