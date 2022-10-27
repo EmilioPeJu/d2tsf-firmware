@@ -1,5 +1,5 @@
 TOP := $(CURDIR)
-PROJECT = evg-ts-feeder
+PROJECT = d2tsf-firmware
 BUILD_DIR = $(TOP)/build
 CROSS_COMPILE = arm-none-eabi-
 

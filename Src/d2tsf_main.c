@@ -7,10 +7,10 @@
 #include "serial.h"
 #include "util.h"
 
-#include "evg_ts_feeder_main.h"
+#include "d2tsf_main.h"
 
 
-void evg_ts_feeder_main()
+void d2tsf_main()
 {
     serial_init();
     gps_wait_for_receiver_up();

@@ -200,7 +200,7 @@ static bool stat_command(char *args)
 
 static bool ver_command(char *args)
 {
-    printf("OK EVG2EVR-FEEDER " RELEASE "\n");
+    printf("OK D2TSF FIRMWARE " RELEASE "\n");
     return true;
 }
 
