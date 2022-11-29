@@ -47,7 +47,7 @@ static bool gps_data_command(char *args)
         printf("+ GPS timestamp: %" PRIu32 "\n", data.timestamp);
     if (data.valid_coords)
         printf("+ GPS coords: %f%c,%f%c\n",
-            data.lat, data.ns, data.lon, data.ew);
+            data.lat / 100.0, data.ns, data.lon / 100.0, data.ew);
     if (data.valid_speed)
         printf("+ GPS speed: %f\n", data.speed);
     printf("+ Using local timestamp: %s\n",
