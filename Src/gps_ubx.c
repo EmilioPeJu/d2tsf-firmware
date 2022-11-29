@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "gps.h"
 #include "gps_nmea.h"
@@ -151,13 +152,38 @@ uint16_t gps_ubx_make_request_for(
 }
 
 
+static char *_rf_status_to_string(unsigned int status)
+{
+    if (status > 4)
+        return "Unknown";
+
+    char *status_names[] = {"INIT", "DONTKNOW", "OK", "SHORT", "OPEN"};
+    return status_names[status];
+}
+
+
+static char *_rf_power_to_string(unsigned int power)
+{
+    if (power == 0)
+        return "OFF";
+    else if (power == 1)
+        return "ON";
+    else
+        return "DONTKNOW";
+}
+
+
 void gps_ubx_print_mon_rf(uint8_t *msg, uint16_t len)
 {
     printf("+ Number of RF blocks: %u\n", (unsigned int) msg[7]);
     for (uint8_t i=0; i < msg[7]; i++) {
-        printf("+ Ant status %u: %u\n", i, (unsigned int) msg[12 + i*24]);
-        printf("+ Ant power %u: %u\n", i, (unsigned int) msg[13 + i*24]);
-        printf("+ GPS noise level %u: %u\n",
+        unsigned int status =  (unsigned int) msg[12 + i*24];
+        printf("+ %u Ant status: %u (%s)\n",
+            i, status, _rf_status_to_string(status));
+        unsigned int power =  (unsigned int) msg[13 + i*24];
+        printf("+ %u Ant power: %u (%s)\n",
+            i, power, _rf_power_to_string(power));
+        printf("+ %u GPS noise level: %u\n",
             i, (unsigned int) msg[22 + i*24] + (msg[23 + i*24] << 8));
     }
     printf(".\n");
@@ -174,17 +200,56 @@ bool gps_ubx_send_mon_rf()
 }
 
 
+static char *_gnss_id_to_string(unsigned int id)
+{
+    if (id > 7)
+        return "Unknown";
+
+    char *gnss_names[] = {
+        "GPS", "SBAS", "Galileo", "BeiDou", "IMES", "QZSS", "GLONASS", "NavIC"};
+    return gnss_names[id];
+}
+
+
 void gps_ubx_print_nav_sat(uint8_t *msg, uint16_t len)
 {
+    uint16_t used_count = 0;
     printf("+ Number of satellites: %u\n", (unsigned int) msg[11]);
     for (uint8_t i=0; i < msg[11]; i++) {
-        printf("+ GNSS %u: %u\n", i, (unsigned int) msg[14 + i*12]);
-        printf("+ ID %u: %u\n", i, msg[15 + i*12]);
-        printf("+ Signal strength %u: %u dBHz\n",
+        unsigned int gnss_id = (unsigned int) msg[14 + i*12];
+        printf("+ %u GNSS: %s (%u)\n", i, _gnss_id_to_string(gnss_id), gnss_id);
+        printf("+ %u Sat ID: %u\n", i, msg[15 + i*12]);
+        printf("+ %u Signal strength: %u dBHz\n",
             i, (unsigned int) msg[16 + i*12]);
-        printf("+ Flags %u: %x\n",
-            i, (unsigned int)  *(uint32_t *) (msg + 22 + i*12));
+        unsigned int flags = *(unsigned int*) (msg + 22 + i*12);
+        printf("+ %u Flags: %x (", i, flags);
+        switch (flags & 0x7) {
+            case 0:
+                printf("NO SIGNAL; ");
+                break;
+            case 1:
+                printf("SEARCHING; ");
+                break;
+            case 2:
+                printf("ACQUIRED; ");
+                break;
+            case 3:
+                printf("DETECTED; ");
+                break;
+            case 4:
+                printf("CODE_LOCKED; ");
+                break;
+            default:
+                printf("ALL_LOCKED; ");
+        }
+        bool used = (flags >> 3) & 1;
+        printf("%s; ", used ? "USED" : "NOT_USED");
+        if (used)
+            used_count++;
+        printf("%s; ", ((flags >> 4) & 3) == 1 ? "HEALTHY" : "NOT_HEALTHY");
+        printf(")\n");
     }
+    printf("+ Satellites used = %" PRIu16 "\n", used_count);
     printf(".\n");
 }
 
