@@ -25,11 +25,12 @@ struct gps_msg_stats gps_get_msg_stats()
 }
 
 
-// true if we got a full message
-static bool _receive_msg(
-    uint8_t *buffer, uint16_t *nbytes, enum gps_msg_type *type,
-    uint16_t max_msg_size)
+// Return buffer with full message or NULL if there is no message
+static uint8_t *_receive_msg(
+    uint16_t *nbytes, enum gps_msg_type *type)
 {
+    static uint8_t buffer[MAX_GPS_MSG_SIZE + 1];
+
     static enum gps_rx_state state = RX_IDLE;
     static uint16_t count = 0;
     static uint16_t payload_size = 0;
@@ -57,7 +58,7 @@ static bool _receive_msg(
                     *type = MSG_NMEA;
                     _gps_msg_stats.nmea_count++;
                     if (gps_nmea_validate_checksum((char *) buffer))
-                        return true;
+                        return buffer;
                     else
                         _gps_msg_stats.nmea_bad_checksum++;
                 }
@@ -78,7 +79,7 @@ static bool _receive_msg(
                     *type = MSG_UBX;
                     _gps_msg_stats.ubx_count++;
                     if (gps_ubx_validate_checksum(buffer, *nbytes)) {
-                        return true;
+                        return buffer;
                     } else {
                         _gps_msg_stats.ubx_bad_checksum++;
                     }
@@ -87,47 +88,43 @@ static bool _receive_msg(
             default:
                 state = RX_IDLE;
         }
-        if (count >= max_msg_size) {
+        if (count >= MAX_GPS_MSG_SIZE) {
             state = RX_IDLE;
             _gps_msg_stats.overflow++;
             count = 0;
         }
     }
     *type = MSG_NONE;
-    return false;
+    return NULL;
 }
 
 
-bool gps_receive_msg(
-    uint8_t *buffer, uint16_t *nbytes, enum gps_msg_type *type,
-    uint16_t max_msg_size, uint16_t timeout)
+// Return buffer with full message or NULL if there is no message
+uint8_t *gps_receive_msg(
+    uint16_t *nbytes, enum gps_msg_type *type, uint16_t timeout)
 {
     uint32_t timeout_tick = HAL_GetTick() + timeout;
-    bool got_msg = false;
+    uint8_t *buffer = NULL;
     bool first = true;
-    while ((!got_msg && HAL_GetTick() < timeout_tick) || first) {
-        got_msg = _receive_msg(buffer, nbytes, type, max_msg_size);
+    while ((!buffer && HAL_GetTick() < timeout_tick) || first) {
+        buffer = _receive_msg(nbytes, type);
         first = false;
     }
 
-    if (!got_msg)
-        *type = MSG_TIMEOUT;
-
-    return got_msg;
+    return buffer;
 }
 
 
 void gps_handle()
 {
-    static uint8_t gps_msg[MAX_COMMAND_SIZE + 1];
     uint16_t nbytes;
     enum gps_msg_type type;
-    bool got_msg = _receive_msg(gps_msg, &nbytes, &type, MAX_COMMAND_SIZE);
-    if (got_msg) {
+    uint8_t *buffer = _receive_msg(&nbytes, &type);
+    if (buffer) {
         if (type == MSG_NMEA) {
-            gps_nmea_process_msg(gps_msg, nbytes);
+            gps_nmea_process_msg(buffer, nbytes);
         } else if (type == MSG_UBX) {
-            if (!gps_ubx_process_msg(gps_msg, nbytes))
+            if (!gps_ubx_process_msg(buffer, nbytes))
                 _gps_msg_stats.ubx_unexpected_count++;
         }
     }

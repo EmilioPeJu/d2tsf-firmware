@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define MAX_GPS_MSG_SIZE 1024
+
 struct gps_msg_stats {
     uint32_t unexpected_start;
     uint32_t overflow;
@@ -19,7 +21,6 @@ struct gps_msg_stats {
 
 enum gps_msg_type {
     MSG_NONE,
-    MSG_TIMEOUT,
     MSG_NMEA,
     MSG_UBX
 };
@@ -28,9 +29,7 @@ void gps_handle();
 
 struct gps_msg_stats gps_get_msg_stats();
 
-
-bool gps_receive_msg(
-    uint8_t *buffer, uint16_t *nbytes, enum gps_msg_type *type,
-   uint16_t max_msg_size, uint16_t timeout);
+uint8_t *gps_receive_msg(
+    uint16_t *nbytes, enum gps_msg_type *type, uint16_t timeout);
 
 #endif

@@ -7,8 +7,6 @@
 
 #include "gps_ubx.h"
 
-static uint8_t aux_recv_buffer[MAX_COMMAND_SIZE + 1];
-
 
 uint8_t gps_ubx_config_val_len(uint32_t key)
 {
@@ -69,20 +67,20 @@ bool gps_ubx_val_get_int(uint32_t key, uint32_t *val)
     uint8_t tx_buffer[16];
     uint16_t nbytes = gps_ubx_make_val_get_packet((uint32_t) key, tx_buffer);
     HAL_UART_Transmit(&TIME_HUART, tx_buffer, nbytes, TX_SERIAL_TIMEOUT);
-    bool got_msg = gps_ubx_receive(aux_recv_buffer, MAX_COMMAND_SIZE, &nbytes);
-    if (!got_msg ||
+    uint8_t *msg_buffer = gps_ubx_receive(&nbytes);
+    if (!msg_buffer ||
             nbytes < 15 ||
-            aux_recv_buffer[2] != UBX_CLASS_VALGET ||
-            aux_recv_buffer[3] != UBX_ID_VALGET ||
-            *(uint32_t *) (aux_recv_buffer + 10) != key)
+            msg_buffer[2] != UBX_CLASS_VALGET ||
+            msg_buffer[3] != UBX_ID_VALGET ||
+            *(uint32_t *) (msg_buffer + 10) != key)
         return false;
 
-    *val = *(uint32_t *) (aux_recv_buffer + 14);
+    *val = *(uint32_t *) (msg_buffer + 14);
     // mask based on value's length
     *val &= (1 << (8*gps_ubx_config_val_len(key))) - 1;
-    got_msg = gps_ubx_receive(aux_recv_buffer, MAX_COMMAND_SIZE, &nbytes);
-    return got_msg && gps_ubx_is_ack_for(
-        aux_recv_buffer, UBX_CLASS_VALGET, UBX_ID_VALGET);
+    msg_buffer = gps_ubx_receive(&nbytes);
+    return msg_buffer && gps_ubx_is_ack_for(
+        msg_buffer, UBX_CLASS_VALGET, UBX_ID_VALGET);
 }
 
 
@@ -114,23 +112,24 @@ uint16_t gps_ubx_make_val_set_packet(uint32_t key, void *val, uint8_t *buffer)
 
 bool gps_ubx_val_set_int(uint32_t key, uint32_t val)
 {
-    uint8_t buffer[32];
-    uint16_t nbytes = gps_ubx_make_val_set_packet((uint32_t) key, &val, buffer);
-    HAL_UART_Transmit(&TIME_HUART, buffer, nbytes, TX_SERIAL_TIMEOUT);
-    bool got_msg = gps_ubx_receive(aux_recv_buffer, MAX_COMMAND_SIZE, &nbytes);
-    return got_msg && gps_ubx_is_ack_for(
-        aux_recv_buffer, UBX_CLASS_VALSET, UBX_ID_VALSET);
+    uint8_t tx_buffer[32];
+    uint16_t nbytes = gps_ubx_make_val_set_packet((uint32_t) key, &val, tx_buffer);
+    HAL_UART_Transmit(&TIME_HUART, tx_buffer, nbytes, TX_SERIAL_TIMEOUT);
+    uint8_t *msg_buffer = gps_ubx_receive(&nbytes);
+    return msg_buffer && gps_ubx_is_ack_for(
+        msg_buffer, UBX_CLASS_VALSET, UBX_ID_VALSET);
 }
 
 
 bool gps_ubx_val_set_double(uint32_t key, double val)
 {
-    uint8_t buffer[32];
-    uint16_t nbytes = gps_ubx_make_val_set_packet((uint32_t) key, &val, buffer);
-    HAL_UART_Transmit(&TIME_HUART, buffer, nbytes, TX_SERIAL_TIMEOUT);
-    bool got_msg = gps_ubx_receive(aux_recv_buffer, MAX_COMMAND_SIZE, &nbytes);
-    return got_msg && gps_ubx_is_ack_for(
-        aux_recv_buffer, UBX_CLASS_VALSET, UBX_ID_VALSET);
+    uint8_t tx_buffer[32];
+    uint16_t nbytes = gps_ubx_make_val_set_packet(
+        (uint32_t) key, &val, tx_buffer);
+    HAL_UART_Transmit(&TIME_HUART, tx_buffer, nbytes, TX_SERIAL_TIMEOUT);
+    uint8_t *msg_buffer = gps_ubx_receive(&nbytes);
+    return msg_buffer && gps_ubx_is_ack_for(
+        msg_buffer, UBX_CLASS_VALSET, UBX_ID_VALSET);
 }
 
 
@@ -236,23 +235,22 @@ bool gps_ubx_validate_checksum(uint8_t *msg, uint16_t len)
 }
 
 
-bool gps_ubx_receive(uint8_t *buffer, uint16_t buffer_len, uint16_t *nbytes)
+uint8_t *gps_ubx_receive(uint16_t *nbytes)
 {
     enum gps_msg_type type;
-    bool got_msg = true;
+    uint8_t *buffer = NULL;
     while (true) {
-        got_msg = gps_receive_msg(
-            buffer, nbytes, &type, buffer_len, RX_SERIAL_TIMEOUT);
-        if (!got_msg) {
-            return false;
+        buffer = gps_receive_msg(nbytes, &type, RX_SERIAL_TIMEOUT);
+        if (!buffer) {
+            return NULL;
         }
         if (type == MSG_UBX) {
-            return true;
+            return buffer;
         } else if (type == MSG_NMEA) {
-            gps_nmea_process_msg(aux_recv_buffer, *nbytes);
+            gps_nmea_process_msg(buffer, *nbytes);
         }
     }
-    return false;
+    return NULL;
 }
 
 

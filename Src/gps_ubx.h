@@ -54,7 +54,7 @@ bool gps_ubx_matches_command(uint8_t *msg, uint8_t class_id, uint8_t cmd_id);
 
 bool gps_ubx_validate_checksum(uint8_t *msg, uint16_t len);
 
-bool gps_ubx_receive(uint8_t *buffer, uint16_t buffer_len, uint16_t *nbytes);
+uint8_t *gps_ubx_receive(uint16_t *nbytes);
 
 bool gps_ubx_process_msg(uint8_t *buffer, uint16_t len);
 
