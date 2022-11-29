@@ -9,8 +9,8 @@
 
 #define MAX_COMMAND_SIZE 256
 #define TERMINATOR 10
-#define TX_SERIAL_TIMEOUT 8  // ms
-#define RX_SERIAL_TIMEOUT 8  // ms
+#define TX_SERIAL_TIMEOUT 16  // ms
+#define RX_SERIAL_TIMEOUT 16  // ms
 
 extern struct ring_buffer time_serial_buffer;
 
