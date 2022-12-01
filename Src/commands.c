@@ -40,7 +40,6 @@ static bool gps_forward_command(char *args)
 static bool gps_data_command(char *args)
 {
     struct gps_nmea_rmc_data data = gps_nmea_get_last_rmc_data();
-    printf("+ GPS data valid: %s\n", data.valid ? "True" : "False");
     printf("+ GPS timestamp updates: %" PRIu32 "\n",
         gps_get_ts_update_counter());
     if (data.valid_timestamp)
