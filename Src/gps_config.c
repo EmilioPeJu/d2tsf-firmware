@@ -11,7 +11,7 @@
 #define TP_USE_RATIO 0
 #define TP_TIMEGRID_UTC 0
 
-#define GPS_RECEIVER_UP_TIMEOUT 2000  // ms
+#define GPS_RECEIVER_UP_TIMEOUT 3000  // ms
 
 #define ERROR_IF_FALSE(expr) \
     do { \
@@ -61,8 +61,12 @@ void gps_wait_for_receiver_up()
     while (HAL_GetTick() < timeout_tick) {
         uint32_t val;
         // get a random parameter to know if receiver is up
-        if (gps_ubx_val_get_int(CFG_TP_PULSE_DEF, &val))
+        if (gps_ubx_val_get_int(CFG_TP_PULSE_DEF, &val)) {
+            // even if it's ready to answer val get, it needs a bit more time to
+            // be ready to val set
+            HAL_Delay(1000);
             return;
+        }
     }
     printf("GPS Receiver unresponsive\n");
 }
