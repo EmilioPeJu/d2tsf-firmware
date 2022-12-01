@@ -114,7 +114,7 @@ uint16_t gps_ubx_make_val_set_packet(uint32_t key, void *val, uint8_t *buffer)
 bool gps_ubx_val_set_int(uint32_t key, uint32_t val)
 {
     uint8_t tx_buffer[32];
-    uint16_t nbytes = gps_ubx_make_val_set_packet((uint32_t) key, &val, tx_buffer);
+    uint16_t nbytes = gps_ubx_make_val_set_packet(key, &val, tx_buffer);
     HAL_UART_Transmit(&TIME_HUART, tx_buffer, nbytes, TX_SERIAL_TIMEOUT);
     uint8_t *msg_buffer = gps_ubx_receive(&nbytes);
     return msg_buffer && gps_ubx_is_ack_for(
@@ -125,8 +125,7 @@ bool gps_ubx_val_set_int(uint32_t key, uint32_t val)
 bool gps_ubx_val_set_double(uint32_t key, double val)
 {
     uint8_t tx_buffer[32];
-    uint16_t nbytes = gps_ubx_make_val_set_packet(
-        (uint32_t) key, &val, tx_buffer);
+    uint16_t nbytes = gps_ubx_make_val_set_packet(key, &val, tx_buffer);
     HAL_UART_Transmit(&TIME_HUART, tx_buffer, nbytes, TX_SERIAL_TIMEOUT);
     uint8_t *msg_buffer = gps_ubx_receive(&nbytes);
     return msg_buffer && gps_ubx_is_ack_for(
