@@ -8,6 +8,36 @@
 
 #include "gps_ubx.h"
 
+static uint8_t _ubx_last_nav_sat[MAX_GPS_MSG_SIZE];
+static uint16_t _ubx_last_nav_sat_size;
+static uint8_t _ubx_last_mon_rf[MAX_GPS_MSG_SIZE];
+static uint16_t _ubx_last_mon_rf_size;
+
+
+// tell if this message should be processed periodically
+static bool _ubx_should_be_processed(uint8_t *buffer, uint16_t len)
+{
+    return gps_ubx_matches_command(buffer, UBX_CLASS_NAV_SAT, UBX_ID_NAV_SAT) ||
+            gps_ubx_matches_command(buffer, UBX_CLASS_MON_RF, UBX_ID_MON_RF);
+}
+
+
+uint16_t gps_satellites_used_count()
+{
+    uint16_t count = 0;
+    uint16_t len = _ubx_last_nav_sat_size;
+    uint8_t *msg = _ubx_last_nav_sat;
+    if (len == 0)
+        return 0;
+
+    for (uint8_t i=0; i < msg[11]; i++) {
+        unsigned int flags = *(unsigned int*) (msg + 22 + i*12);
+        if((flags >> 3) & 1)
+            count++;
+    }
+    return count;
+}
+
 
 uint8_t gps_ubx_config_val_len(uint32_t key)
 {
@@ -172,8 +202,15 @@ static char *_rf_power_to_string(unsigned int power)
 }
 
 
-void gps_ubx_print_mon_rf(uint8_t *msg, uint16_t len)
+bool gps_ubx_print_last_mon_rf()
 {
+    uint16_t len = _ubx_last_mon_rf_size;
+    uint8_t *msg = _ubx_last_mon_rf;
+    if (len == 0) {
+        printf("ERR no data available\n");
+        return false;
+    }
+
     printf("+ Number of RF blocks: %u\n", (unsigned int) msg[7]);
     for (uint8_t i=0; i < msg[7]; i++) {
         unsigned int status =  (unsigned int) msg[12 + i*24];
@@ -186,6 +223,7 @@ void gps_ubx_print_mon_rf(uint8_t *msg, uint16_t len)
             i, (unsigned int) msg[22 + i*24] + (msg[23 + i*24] << 8));
     }
     printf(".\n");
+    return true;
 }
 
 
@@ -210,13 +248,20 @@ static char *_gnss_id_to_string(unsigned int id)
 }
 
 
-void gps_ubx_print_nav_sat(uint8_t *msg, uint16_t len)
+bool gps_ubx_print_last_nav_sat()
 {
+    uint16_t len = _ubx_last_nav_sat_size;
+    uint8_t *msg = _ubx_last_nav_sat;
+    if (len == 0) {
+        printf("ERR no data available\n");
+        return false;
+    }
+
     uint16_t used_count = 0;
     printf("+ Number of satellites: %u\n", (unsigned int) msg[11]);
     for (uint8_t i=0; i < msg[11]; i++) {
         unsigned int gnss_id = (unsigned int) msg[14 + i*12];
-        printf("+ %u GNSS: %s (%u)\n", i, _gnss_id_to_string(gnss_id), gnss_id);
+        printf("+ %u GNSS: %u (%s)\n", i, gnss_id, _gnss_id_to_string(gnss_id));
         printf("+ %u Sat ID: %u\n", i, msg[15 + i*12]);
         printf("+ %u Signal strength: %u dBHz\n",
             i, (unsigned int) msg[16 + i*12]);
@@ -250,6 +295,7 @@ void gps_ubx_print_nav_sat(uint8_t *msg, uint16_t len)
     }
     printf("+ Satellites used = %" PRIu16 "\n", used_count);
     printf(".\n");
+    return true;
 }
 
 
@@ -309,7 +355,10 @@ uint8_t *gps_ubx_receive(uint16_t *nbytes)
             return NULL;
         }
         if (type == MSG_UBX) {
-            return buffer;
+            if (_ubx_should_be_processed(buffer, *nbytes))
+                gps_ubx_process_msg(buffer, *nbytes);
+            else
+                return buffer;
         } else if (type == MSG_NMEA) {
             gps_nmea_process_msg(buffer, *nbytes);
         }
@@ -321,11 +370,13 @@ uint8_t *gps_ubx_receive(uint16_t *nbytes)
 bool gps_ubx_process_msg(uint8_t *buffer, uint16_t len)
 {
     if (gps_ubx_matches_command(buffer, UBX_CLASS_NAV_SAT, UBX_ID_NAV_SAT)) {
-        gps_ubx_print_nav_sat(buffer, len);
+        memcpy(_ubx_last_nav_sat, buffer, len);
+        _ubx_last_nav_sat_size = len;
         return true;
     } else if (
             gps_ubx_matches_command(buffer, UBX_CLASS_MON_RF, UBX_ID_MON_RF)) {
-        gps_ubx_print_mon_rf(buffer, len);
+        memcpy(_ubx_last_mon_rf, buffer, len);
+        _ubx_last_mon_rf_size = len;
         return true;
     } else {
         return false;

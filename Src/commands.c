@@ -60,25 +60,13 @@ static bool gps_data_command(char *args)
 
 static bool gps_mon_rf_command(char *args)
 {
-    bool result = gps_ubx_send_mon_rf();
-    if (result)
-        printf("OK MON RF Sent\n");
-    else
-        printf("ERR MON RF failed\n");
-
-    return result;
+    return gps_ubx_print_last_mon_rf();
 }
 
 
 static bool gps_nav_sat_command(char *args)
 {
-    bool result = gps_ubx_send_nav_sat();
-    if (result)
-        printf("OK NAV SAT Sent\n");
-    else
-        printf("ERR NAV SAT failed\n");
-
-    return result;
+    return gps_ubx_print_last_nav_sat();
 }
 
 

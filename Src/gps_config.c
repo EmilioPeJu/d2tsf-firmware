@@ -51,6 +51,8 @@ bool gps_config()
     ERROR_IF_FALSE(gps_ubx_val_set_double(CFG_TP_DUTY_LOCK_TP2, 50.0));
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_TIMEGRID_TP2, TP_TIMEGRID_UTC));
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_TP2_ENA, 1));
+    ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_MSGOUT_UBX_MON_RF_UART1, 1));
+    ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_MSGOUT_UBX_NAV_SAT_UART1, 1));
     return result;
 }
 

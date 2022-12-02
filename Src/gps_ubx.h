@@ -21,6 +21,8 @@
 #define UBX_CLASS_NAV_SAT 0x1
 #define UBX_ID_NAV_SAT 0x35
 
+uint16_t gps_satellites_used_count();
+
 uint8_t gps_ubx_config_val_len(uint32_t key);
 
 uint16_t gps_ubx_make_val_set_packet(uint32_t key, void *val, uint8_t *buffer);
@@ -36,11 +38,11 @@ bool gps_ubx_val_get_int(uint32_t key, uint32_t *val);
 uint16_t gps_ubx_make_request_for(
     uint8_t *buffer, uint8_t class_id, uint8_t cmd_id);
 
-void gps_ubx_print_mon_rf(uint8_t *msg, uint16_t len);
+bool gps_ubx_print_last_mon_rf();
 
 bool gps_ubx_send_mon_rf();
 
-void gps_ubx_print_nav_sat(uint8_t *msg, uint16_t len);
+bool gps_ubx_print_last_nav_sat();
 
 bool gps_ubx_send_nav_sat();
 
