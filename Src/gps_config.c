@@ -40,14 +40,14 @@ bool gps_config()
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_USE_LOCKED_TP1, 1));
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_FREQ_TP1, 1));  // 1 Hz
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_FREQ_LOCK_TP1, 1));
-    ERROR_IF_FALSE(gps_ubx_val_set_double(CFG_TP_DUTY_TP1, 25.0));
+    ERROR_IF_FALSE(gps_ubx_val_set_double(CFG_TP_DUTY_TP1, 50.0));
     ERROR_IF_FALSE(gps_ubx_val_set_double(CFG_TP_DUTY_LOCK_TP1, 50.0));
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_TIMEGRID_TP1, TP_TIMEGRID_UTC));
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_TP1_ENA, 1));
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_USE_LOCKED_TP2, 1));
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_FREQ_TP2, 1000000));  // 1 MHz
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_FREQ_LOCK_TP2, 1000000));
-    ERROR_IF_FALSE(gps_ubx_val_set_double(CFG_TP_DUTY_TP2, 25.0));
+    ERROR_IF_FALSE(gps_ubx_val_set_double(CFG_TP_DUTY_TP2, 50.0));
     ERROR_IF_FALSE(gps_ubx_val_set_double(CFG_TP_DUTY_LOCK_TP2, 50.0));
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_TIMEGRID_TP2, TP_TIMEGRID_UTC));
     ERROR_IF_FALSE(gps_ubx_val_set_int(CFG_TP_TP2_ENA, 1));
