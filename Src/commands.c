@@ -135,6 +135,30 @@ static bool help_command(char *args)
 }
 
 
+static bool mon_command(char *args)
+{
+    printf("OK ");
+    printf("%" PRIu32 ",", util_get_uptime());
+    printf("%u,", (unsigned int) gps_local_timestamp_on());
+    printf("%" PRIu32 ",", gps_get_last_timestamp());
+    printf("%" PRIu16, gps_satellites_used_count());
+    printf("\n");
+    return true;
+}
+
+
+static bool mon2_command(char *args)
+{
+    printf("+ Uptime: %" PRIu32 "\n", util_get_uptime());
+    printf("+ Using local timestamp: %u\n",
+        (unsigned int) gps_local_timestamp_on());
+    printf("+ Last timestamp: %" PRIu32 "\n", gps_get_last_timestamp());
+    printf("+ Satellites used: %" PRIu16 "\n", gps_satellites_used_count());
+    printf(".\n");
+    return true;
+}
+
+
 static bool msg_stat_command(char *args)
 {
     struct gps_msg_stats stats = gps_get_msg_stats();
@@ -207,6 +231,8 @@ struct command_description command_table[] = {
     {"gps_valset", gps_valset_command,
         "set a GPS configuration parameter. gps_valset <hex-key> <hex-value>"},
     {"help", help_command, "generates a command list"},
+    {"mon", mon_command, "show monitoring information"},
+    {"mon2", mon2_command, "show monitoring information explained"},
     {"msg_stat", msg_stat_command, "show message statistics"},
     {"ping", ping_command, "return a pong"},
     {"reset", reset_command, "reset MCU"},

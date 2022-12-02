@@ -144,9 +144,19 @@ uint32_t gps_local_timestamp_use_count()
 }
 
 
+uint32_t gps_get_last_timestamp()
+{
+    if (_using_hold_ts)
+        return _hold_ts + 1;
+    else
+        return _last_nmea_rmc_data.timestamp + 1;
+}
+
+
 // we assume we get a RMC message every second shortly after the PPS
 bool gps_nmea_process_msg(uint8_t *buffer, uint16_t len)
 {
+    bool result = false;
     if (_forward_nmea_to_host)
         HAL_UART_Transmit(&HOST_HUART, buffer, len, TX_SERIAL_TIMEOUT);
 
@@ -155,23 +165,21 @@ bool gps_nmea_process_msg(uint8_t *buffer, uint16_t len)
 
     struct gps_nmea_rmc_data gps_data = gps_nmea_parse_rmc((char *) buffer);
     if (gps_data.valid) {
-        _ts_update_counter++;
         _last_nmea_rmc_data = gps_data;
         _hold_ts = gps_data.timestamp;
         _using_hold_ts = false;
-        gpio_shift_timestamp(gps_data.timestamp + 1);
-        if (_notify_timestamp)
-            printf("%" PRIu32 "\n", gps_data.timestamp);
-        return true;
+        _ts_update_counter++;
+        result = true;
     } else {
         _hold_ts++;
         _using_hold_ts = true;
         _hold_ts_use_count++;
-        gpio_shift_timestamp(_hold_ts + 1);
-        if (_notify_timestamp)
-            printf("%" PRIu32 "\n", _hold_ts);
-        return false;
     }
 
-    return false;
+    uint32_t ts = gps_get_last_timestamp();
+    gpio_shift_timestamp(ts);
+    if (_notify_timestamp)
+        printf("%" PRIu32 "\n", ts);
+
+    return result;
 }
