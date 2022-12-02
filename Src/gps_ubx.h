@@ -40,6 +40,8 @@ uint16_t gps_ubx_make_request_for(
 
 bool gps_ubx_print_last_mon_rf();
 
+bool gps_ubx_print_last_mon_rf_short();
+
 bool gps_ubx_send_mon_rf();
 
 bool gps_ubx_print_last_nav_sat();

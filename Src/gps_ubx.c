@@ -202,6 +202,29 @@ static char *_rf_power_to_string(unsigned int power)
 }
 
 
+bool gps_ubx_print_last_mon_rf_short()
+{
+    uint16_t len = _ubx_last_mon_rf_size;
+    uint8_t *msg = _ubx_last_mon_rf;
+    if (len == 0) {
+        printf("0");
+        return false;
+    }
+
+    printf("%u,", (unsigned int) msg[7]);
+    for (uint8_t i=0; i < msg[7]; i++) {
+        unsigned int status =  (unsigned int) msg[12 + i*24];
+        printf("%s,", _rf_status_to_string(status));
+        unsigned int power =  (unsigned int) msg[13 + i*24];
+        printf("%s,", _rf_power_to_string(power));
+        printf("%u",(unsigned int) msg[22 + i*24] + (msg[23 + i*24] << 8));
+        if (i < msg[7] - 1)
+            printf(",");
+    }
+    return true;
+}
+
+
 bool gps_ubx_print_last_mon_rf()
 {
     uint16_t len = _ubx_last_mon_rf_size;

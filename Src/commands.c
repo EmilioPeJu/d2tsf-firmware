@@ -141,7 +141,8 @@ static bool mon_command(char *args)
     printf("%" PRIu32 ",", util_get_uptime());
     printf("%u,", (unsigned int) gps_local_timestamp_on());
     printf("%" PRIu32 ",", gps_get_last_timestamp());
-    printf("%" PRIu16, gps_satellites_used_count());
+    printf("%" PRIu16 ",", gps_satellites_used_count());
+    gps_ubx_print_last_mon_rf_short();
     printf("\n");
     return true;
 }
@@ -154,7 +155,7 @@ static bool mon2_command(char *args)
         (unsigned int) gps_local_timestamp_on());
     printf("+ Last timestamp: %" PRIu32 "\n", gps_get_last_timestamp());
     printf("+ Satellites used: %" PRIu16 "\n", gps_satellites_used_count());
-    printf(".\n");
+    gps_ubx_print_last_mon_rf();
     return true;
 }
 
