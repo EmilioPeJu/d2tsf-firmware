@@ -12,6 +12,7 @@ ifdef BINUTILS_DIR
 endif
 
 RELEASE = $(shell git describe --tags --dirty)
+GPS_MIN_TIMESTAMP = $(shell date +%s)
 
 ifeq ($(RELEASE),)
 	OUTFILE_PREFIX := $(PROJECT)
@@ -20,6 +21,7 @@ else
 endif
 
 CPPFLAGS += -DRELEASE='"$(RELEASE)"'
+CPPFLAGS += -DGPS_MIN_TIMESTAMP=$(GPS_MIN_TIMESTAMP)
 
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb

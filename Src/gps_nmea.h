@@ -43,4 +43,6 @@ bool gps_nmea_process_msg(uint8_t *buffer, uint16_t len);
 
 uint32_t gps_get_last_timestamp();
 
+void gps_set_hold_ts(uint32_t ts);
+
 #endif

@@ -153,6 +153,12 @@ uint32_t gps_get_last_timestamp()
 }
 
 
+void gps_set_hold_ts(uint32_t ts)
+{
+    _hold_ts = ts;
+}
+
+
 // we assume we get a RMC message every second shortly after the PPS
 bool gps_nmea_process_msg(uint8_t *buffer, uint16_t len)
 {

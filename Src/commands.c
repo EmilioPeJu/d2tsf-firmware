@@ -23,6 +23,26 @@ static bool run_tests_command(char *args)
 #endif
 
 
+static bool gps_date_set_command(char *args)
+{
+    uint32_t ts;
+    int nargs = sscanf(args, "%" PRIu32, &ts);
+    if (nargs != 1) {
+        printf("ERR invalid format\n");
+        return false;
+    }
+#ifdef GPS_MIN_TIMESTAMP
+    if (ts < GPS_MIN_TIMESTAMP) {
+        printf("ERR invalid timestamp\n");
+        return false;
+    }
+#endif
+    gps_set_hold_ts(ts);
+    printf("OK gps_date_set done\n");
+    return true;
+}
+
+
 static bool gps_forward_command(char *args)
 {
     unsigned int enable;
@@ -221,6 +241,8 @@ struct command_description command_table[] = {
 #ifdef TEST
     {"run_tests", run_tests_command, "run tests"},
 #endif
+    {"gps_date_set", gps_date_set_command,
+        "Set holdover timestamp counter. gps_date_set <unix-time>"},
     {"gps_data", gps_data_command, "show GPS data"},
     {"gps_forward", gps_forward_command,
         "forward GPS NMEA messages to host serial"},
